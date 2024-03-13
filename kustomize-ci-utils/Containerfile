@@ -1,0 +1,54 @@
+FROM registry.access.redhat.com/ubi9/toolbox:9.3
+
+# install packages
+RUN dnf install -y gettext jq
+
+# install binaries
+ENV BIN_DIR=/usr/local/bin \
+    TMP_FILE=/tmp/archive.tar.gz
+
+# install helm
+ARG HELM_URL=https://mirror.openshift.com/pub/openshift-v4/clients/helm/latest/helm-linux-amd64.tar.gz
+RUN wget "${HELM_URL}" -O "$TMP_FILE" --quiet
+RUN tar -zvx --no-same-owner \
+      --transform='s/-.*//g' \
+      -C "${BIN_DIR}" \
+      -f "$TMP_FILE" \
+      helm-linux-amd64
+
+# install oc clients
+ARG OC_URL=https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/openshift-client-linux.tar.gz
+RUN wget "${OC_URL}" -O "$TMP_FILE" --quiet
+RUN tar -zvx --no-same-owner \
+      -C "${BIN_DIR}" \
+      -f "$TMP_FILE" \
+      oc
+RUN ln -s "$BIN_DIR/oc" "$BIN_DIR/kubectl"
+
+# install yq
+ARG YQ_URL=https://github.com/mikefarah/yq/releases/download/v4.42.1/yq_linux_amd64.tar.gz
+RUN wget "${YQ_URL}" -O "$TMP_FILE" --quiet
+RUN tar -zvx --no-same-owner \
+      --transform='s/_.*//g' \
+      -C "${BIN_DIR}" \
+      -f "$TMP_FILE" \
+      ./yq_linux_amd64
+
+# install tkn
+ARG TKN_URL=https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/pipelines/latest/tkn-linux-amd64.tar.gz
+RUN wget "${TKN_URL}" -O "$TMP_FILE" --quiet
+RUN tar -zvx --no-same-owner \
+      -C "${BIN_DIR}" \
+      -f "$TMP_FILE" \
+      opc tkn tkn-pac
+
+# install argo cli
+ARG ARGOCD_URL=https://github.com/argoproj/argo-cd/releases/download/v2.9.2/argocd-linux-amd64
+RUN wget "${TKN_URL}" -O "$BIN_DIR/argocd" --quiet
+
+# fix permissions on binaries
+RUN chmod 755 "${BIN_DIR}"/*
+
+# cleanup image
+RUN dnf clean all && rm -rf "$TMP_FILE"
+
