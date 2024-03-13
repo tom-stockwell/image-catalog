@@ -1,0 +1,41 @@
+name: gitops-ci-pr
+on:
+  push:
+    branches:
+      - ${{ github.event.repository.default_branch }}
+    paths:
+      - gitops-ci/**
+      - .github/workflows/gitops-publish.yml
+permissions: read-all
+
+jobs:
+  publish:
+    env:
+      CONTEXT_DIR: gitops-ci
+      IMAGE_NAME: gitops-ci
+
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: latest
+          containerfiles: |
+            ./${{ env.CONTEXT_DIR }}/Containerfile
+          oci: true
+          build-args: --squash
+
+      - name: Push to Quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: quay.io/tstockwell
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
