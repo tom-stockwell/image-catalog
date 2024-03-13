@@ -1,11 +1,11 @@
-name: gitops-ci-pr
+name: gitops-ci-publish
 on:
   push:
     branches:
-      - ${{ github.event.repository.default_branch }}
+      - main
     paths:
       - gitops-ci/**
-      - .github/workflows/gitops-publish.yml
+      - .github/workflows/gitops-ci-publish.yml
 permissions: read-all
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
         uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build-image.outputs.image }}
-          tags: ${{ steps.build_image.outputs.tags }}
+          tags: ${{ steps.build-image.outputs.tags }}
           registry: quay.io/tstockwell
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
