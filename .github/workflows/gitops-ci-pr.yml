@@ -1,0 +1,26 @@
+name: gitops-ci-pr
+on:
+  pull_request:
+    paths:
+      - gitops-ci/**
+      - .github/workflows/gitops-ci-pr.yml
+permissions: read-all
+
+jobs:
+  build:
+    env:
+      CONTEXT_DIR: gitops-ci
+      IMAGE_NAME: gitops-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: latest
+          containerfiles: |
+            ./${{ env.CONTEXT_DIR }}/Containerfile
+          oci: true
+          build-args: --squash
