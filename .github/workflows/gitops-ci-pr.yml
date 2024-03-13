@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - gitops-ci/**
-      - .github/workflows/build-gitops-ci.yml
+      - .github/workflows/gitops-ci-pr.yml
 permissions: read-all
 
 jobs:
